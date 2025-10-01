@@ -1,0 +1,62 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
+# --- Data (replace with experimental values) ---
+datasets = [
+    {
+        "shear_rate": np.array([1, 6.21, 11.4, 16.6, 21.8, 27.1, 32.3, 37.5, 42.7, 47.9]),
+        "viscosity": np.array([709.13, 711.56, 698.66, 694.44, 696.74, 689.06, 684.15, 691.85, 686.37, 671.31]),
+        "label": "sample1"
+    },
+    {
+        "shear_rate": np.array([1, 6.21, 11.4, 16.6, 21.8, 27.1, 32.3, 37.5, 42.7, 47.9]),
+        "viscosity": np.array([5045.9, 4387.2, 3936.2, 3426.2, 2618.3, 2602.8, 2245, 2142.2, 1890.6, 1729.8]),
+        "label": "Sample2"
+    },
+    {
+        "shear_rate": np.array([1, 6.21, 11.4, 16.6, 21.8, 27.1, 32.3, 37.5, 42.7, 47.9]),
+        "viscosity": np.array([16761, 15464, 14802, 12195, 10846, 10114, 9422.4, 8856.7, 8014.9, 7522.2]),
+        "label": "Sample3"
+    },
+    {
+        "shear_rate": np.array([1, 6.21, 11.4, 16.6, 21.8, 27.1, 32.3, 37.5, 42.7, 47.9]),
+        "viscosity": np.array([48923, 41841, 34869, 34631, 33774, 31362, 29804, 28558, 26772, 23984]),
+        "label": "SG3"
+    }
+]
+
+# --- Herschel–Bulkley model for viscosity ---
+def HB_viscosity(gamma, tau_y, K, n):
+    return tau_y/gamma + K * gamma**(n-1)
+
+plt.figure(figsize=(7,5))
+
+# --- Fit and plot each dataset ---
+for data in datasets:
+    shear_rate = data["shear_rate"]
+    viscosity = data["viscosity"]
+
+    # Fit HB model
+    popt, _ = curve_fit(HB_viscosity, shear_rate, viscosity,
+                        p0=[10, 10, 0.5], maxfev=20000)
+    tau_y, K, n = popt
+
+    # Smooth fit curve
+    gamma_fit = np.linspace(min(shear_rate), max(shear_rate), 200)
+    visc_fit = HB_viscosity(gamma_fit, tau_y, K, n)
+
+    # Plot experimental data and fitted curve
+    plt.scatter(shear_rate, viscosity, label=f'{data["label"]} Data')
+    plt.plot(gamma_fit, visc_fit, '--',
+             label=f'{data["label"]} Fit (τy={tau_y:.1f}, K={K:.1f}, n={n:.2f})')
+
+# --- Plot settings ---
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('Shear Rate (s$^{-1}$)', fontsize=12)
+plt.ylabel('Viscosity (Pa·s)', fontsize=12)
+plt.title('Viscosity vs Shear Rate (Herschel–Bulkley Fits)')
+plt.legend(fontsize=9)
+plt.tight_layout()
+plt.show()
