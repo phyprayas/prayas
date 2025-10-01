@@ -1,0 +1,61 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+
+# --- Example datasets (replace with your experimental values) ---
+# You can add as many datasets as you want inside this list.
+datasets = [
+    
+    {
+        "shear_rate": np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+        "viscosity": np.array([709.13, 711.56, 698.66, 694.44, 696.74, 689.06, 684.15, 691.85, 686.37, 671.31]),
+        "label": "Sample1"
+    },
+    {
+        "shear_rate": np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+        "viscosity": np.array([5045.9, 4387.2, 3936.2, 3426.2, 2618.3, 2602.8, 2245, 2142.2, 1890.6, 1729.8]),
+        "label": "Sample2"
+    },
+    {
+        "shear_rate": np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+        "viscosity": np.array([16761, 15464, 14802, 12195, 10846, 10114, 9422.4, 8856.7, 8014.9, 7522.2]),
+        "label": "Sample3"
+    },
+    {
+        "shear_rate": np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+        "viscosity": np.array([48923, 41841, 34869, 34631, 33774, 31362, 29804, 28558, 26772, 23984]),
+        "label": "Sample4"
+    }
+]
+# --- Define Power-law Model ---
+def power_law(gamma, K, n):
+    return K * gamma**(n-1)
+
+plt.figure(figsize=(7,5))
+
+# --- Fit and plot each dataset ---
+for data in datasets:
+    shear_rate = data["shear_rate"]
+    viscosity = data["viscosity"]
+
+    # Fit the model
+    popt, _ = curve_fit(power_law, shear_rate, viscosity, p0=[100, 0.5], maxfev=10000)
+    K, n = popt
+
+    # Generate smooth curve for plotting
+    gamma_fit = np.linspace(min(shear_rate), max(shear_rate), 200)
+    visc_fit = power_law(gamma_fit, K, n)
+
+    # Plot experimental data + fit
+    plt.scatter(shear_rate, viscosity, label=f'{data["label"]} Data')
+    plt.plot(gamma_fit, visc_fit, '--', label=f'{data["label"]} Fit (K={K:.2f}, n={n:.2f})')
+
+# --- Plot Settings ---
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('Shear Rate (s$^{-1}$)', fontsize=12)
+plt.ylabel('Viscosity (Pa·s)', fontsize=12)
+plt.title('Viscosity vs Shear Rate with Power-law Fits')
+plt.legend()
+plt.tight_layout()
+plt.show()
